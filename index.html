@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 10 10%27%3E%3Ccircle cx=%275%27 cy=%275%27 r=%274%27 fill=%27%23D3304A%27/%3E%3C/svg%3E">
+<title>NeoGuard · Fetal heart-trace triage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;700;800&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FBF1F1; --grid1:#F3D6D8; --grid2:#E9B9BE; --panel:#FFFFFF; --ink:#2B1630; --muted:#6B5870; --line:#E6D3D8;
+  --field:#FAF5F7; --accent:#6A2C91; --trace:#1B7F73;
+  --normal:#1F9D8B; --suspect:#E39A00; --pathological:#D3304A;
+  --display:'Sora','Trebuchet MS',system-ui,sans-serif; --body:'Source Sans 3','Segoe UI',system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--paper:#1A0F1E; --grid1:#2A1B30; --grid2:#3A2642; --panel:#25162B; --ink:#F3E9F5; --muted:#B49DBA; --line:#3F2B47;
+    --field:#1D1122; --accent:#C08BE6; --trace:#4FD1BE}
+}
+*{box-sizing:border-box;margin:0}
+body{color:var(--ink);font:400 16px/1.55 var(--body);background-color:var(--paper);
+  background-image:linear-gradient(var(--grid2) 1px,transparent 1px),linear-gradient(90deg,var(--grid2) 1px,transparent 1px),linear-gradient(var(--grid1) 1px,transparent 1px),linear-gradient(90deg,var(--grid1) 1px,transparent 1px);
+  background-size:72px 72px,72px 72px,12px 12px,12px 12px;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+header{display:flex;align-items:center;justify-content:space-between;padding:22px 0 0;gap:12px;flex-wrap:wrap}
+.brand{font:800 22px var(--display);letter-spacing:-.02em;display:flex;align-items:center;gap:10px}
+.brand i{width:14px;height:14px;border-radius:50%;background:var(--pathological);box-shadow:0 0 0 5px color-mix(in srgb,var(--pathological) 25%,transparent);animation:beat 1.2s infinite}
+@keyframes beat{0%,100%{transform:scale(1)}15%{transform:scale(1.35)}30%{transform:scale(1)}}
+.pill{font-size:13px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:5px 12px}
+.hero{padding:34px 0 8px;max-width:800px}
+h1{font:800 clamp(2.1rem,5.2vw,3.7rem)/1.04 var(--display);letter-spacing:-.035em}
+.hero p{margin-top:16px;font-size:1.1rem;color:var(--muted);max-width:62ch}
+.ctg{width:100%;height:auto;display:block;margin:10px 0 26px;background:color-mix(in srgb,var(--panel) 70%,transparent);border:1px solid var(--line);border-radius:18px}
+.ctg path{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.ctg .fhr{stroke:var(--trace);stroke-width:2.2}.ctg .uc{stroke:var(--accent);stroke-width:2}
+.ctg text{font:600 11px var(--body);fill:var(--muted)}
+.draw{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 3.2s .2s ease-out forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+main{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;align-items:start}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:28px}
+.card h2{font:700 1.3rem var(--display);letter-spacing:-.02em}
+.sub{color:var(--muted);font-size:.95rem;margin:4px 0 16px}
+.try{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;align-items:center;font-size:.9rem;color:var(--muted)}
+.try button{font:600 .85rem var(--body);border:1.5px solid var(--line);background:var(--field);color:var(--ink);border-radius:99px;padding:6px 12px;cursor:pointer}
+.try button:hover{border-color:var(--accent)}
+fieldset{border:0;padding:0;margin:0 0 6px}
+legend{font:700 .95rem var(--display);margin:6px 0 12px;color:var(--accent)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
+label{display:block;font-weight:600;font-size:.9rem;margin-bottom:5px}
+.hint{display:block;font-weight:400;color:var(--muted);font-size:.8rem;margin-top:4px}
+.in{position:relative}
+input{width:100%;font:500 1rem var(--body);color:var(--ink);background:var(--field);border:1.5px solid var(--line);border-radius:12px;padding:11px 50px 11px 13px;outline:none;transition:border-color .15s,box-shadow .15s}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent)}
+input.bad{border-color:var(--pathological)}
+.unit{position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:.78rem;color:var(--muted);pointer-events:none}
+.go{margin-top:20px;width:100%;font:700 1.05rem var(--display);color:#fff;background:var(--accent);border:0;border-radius:14px;padding:16px;cursor:pointer;transition:filter .15s}
+@media(prefers-color-scheme:dark){.go{color:#1A0F1E}}
+.go:hover{filter:brightness(1.1)}.go:disabled{opacity:.6;cursor:wait}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.err{display:none;margin-top:14px;padding:12px 14px;border-radius:12px;border:1px solid var(--pathological);background:color-mix(in srgb,var(--pathological) 12%,transparent);font-size:.92rem}
+
+.result{position:sticky;top:20px;padding:0;overflow:hidden}
+.band{padding:22px 26px;background:var(--c,var(--line));color:#fff;transition:background .4s}
+.band small{display:block;font-size:.85rem;opacity:.9}
+.band b{font:800 1.9rem/1.15 var(--display);letter-spacing:-.02em}
+.body{padding:24px 26px 26px}
+.empty{color:var(--muted)}
+.res{display:none}
+.lanes{display:grid;gap:10px}
+.lane{display:grid;grid-template-columns:96px 1fr 44px;align-items:center;gap:10px;font-size:.9rem;font-weight:600}
+.track{height:12px;border-radius:9px;background:var(--field);border:1px solid var(--line);overflow:hidden}
+.fill{height:100%;width:0;border-radius:9px;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.lane span:last-child{text-align:right;font-variant-numeric:tabular-nums}
+h3{font:700 .95rem var(--display);margin:22px 0 10px}
+.drow{display:grid;grid-template-columns:150px 1fr 40px;gap:10px;align-items:center;font-size:.86rem;margin-bottom:8px}
+.dtrack{height:8px;border-radius:9px;background:var(--field);position:relative}
+.dtrack::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--muted);opacity:.5}
+.dbar{position:absolute;top:0;bottom:0;border-radius:9px;width:0;transition:width 1s .3s cubic-bezier(.2,.8,.2,1)}
+.dval{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.legend{font-size:.76rem;color:var(--muted)}
+.action{border-left:4px solid var(--c);background:var(--field);padding:12px 14px;border-radius:0 12px 12px 0;font-size:.95rem}
+.action ul{padding-left:18px}.action li{margin-top:4px}
+.how{margin:48px 0 0;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:26px 28px}.how h2{font:700 1.3rem var(--display);margin-bottom:10px}.how ol{padding-left:20px}.how li{margin-bottom:8px;max-width:78ch}
+.why{margin:24px 0 20px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media(max-width:760px){.why{grid-template-columns:1fr}}
+.why div{background:color-mix(in srgb,var(--panel) 80%,transparent);border:1px solid var(--line);border-radius:16px;padding:18px}
+.why b{display:block;font:700 1.1rem var(--display);margin-bottom:4px}.why span{color:var(--muted);font-size:.93rem}
+footer{padding:12px 0 40px;color:var(--muted);font-size:.85rem;max-width:84ch}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid #fff6;border-top-color:#fff;border-radius:50%;animation:s .7s linear infinite;vertical-align:-3px;margin-right:8px}
+@keyframes s{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.draw{stroke-dashoffset:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><i></i>NeoGuard</div>
+    <span class="pill" id="pill">Loading model…</span>
+  </header>
+
+  <section class="hero">
+    <h1>A second pair of eyes for every fetal heart trace.</h1>
+    <p>A CTG is the heart-rate printout used during labour. Type in its numbers. NeoGuard tells you if the trace looks normal, suspect or pathological, explains why, and suggests the next step. Built to support midwives and nurses where an obstetrician is not in the room.</p>
+  </section>
+
+  <svg class="ctg" viewBox="0 0 1100 210" role="img" aria-label="Example CTG trace: fetal heart rate above, uterine contractions below">
+    <text x="12" y="18">Fetal heart rate</text><text x="12" y="132">Contractions</text>
+    <path class="fhr draw" id="fhr" pathLength="1"/><path class="uc draw" id="uc" pathLength="1"/>
+  </svg>
+
+  <main>
+    <form class="card" id="form" novalidate>
+      <h2>Readings from the CTG printout</h2>
+      <p class="sub">All values are on the summary the CTG software prints after a recording.</p>
+      <div class="try"><span>Try a real case:</span>
+        <button type="button" data-ex="normal">Normal</button><button type="button" data-ex="suspect">Suspect</button><button type="button" data-ex="pathological">Pathological</button></div>
+
+      <fieldset><legend>Heart-rate trace</legend>
+        <div class="grid">
+          <div><label for="LB">Baseline heart rate</label><div class="in"><input id="LB" inputmode="decimal" placeholder="e.g. 133"><span class="unit">bpm</span></div></div>
+          <div><label for="ASTV">Abnormal short-term variability</label><div class="in"><input id="ASTV" inputmode="decimal" placeholder="e.g. 45"><span class="unit">% time</span></div></div>
+          <div><label for="MSTV">Mean short-term variability</label><div class="in"><input id="MSTV" inputmode="decimal" placeholder="e.g. 1.2"><span class="unit">ms</span></div></div>
+          <div><label for="ALTV">Abnormal long-term variability</label><div class="in"><input id="ALTV" inputmode="decimal" placeholder="e.g. 10"><span class="unit">% time</span></div></div>
+          <div><label for="MLTV">Mean long-term variability</label><div class="in"><input id="MLTV" inputmode="decimal" placeholder="e.g. 8"><span class="unit">ms</span></div></div>
+        </div>
+      </fieldset>
+      <fieldset style="margin-top:18px"><legend>Events counted on the trace</legend>
+        <p class="sub" style="margin:-6px 0 12px">Fill in every box. Type 0 only if you checked and none were seen.</p>
+        <div class="grid">
+          <div><label for="duration">Recording length</label><div class="in"><input id="duration" inputmode="numeric" placeholder="e.g. 30"><span class="unit">min</span></div></div>
+          <div><label for="AC">Accelerations</label><div class="in"><input id="AC" inputmode="numeric" placeholder="e.g. 2"><span class="unit">count</span></div><span class="hint">Short rises in heart rate</span></div>
+          <div><label for="FM">Fetal movements</label><div class="in"><input id="FM" inputmode="numeric" placeholder="e.g. 2"><span class="unit">count</span></div></div>
+          <div><label for="UC">Uterine contractions</label><div class="in"><input id="UC" inputmode="numeric" placeholder="e.g. 2"><span class="unit">count</span></div></div>
+          <div><label for="DL">Light decelerations</label><div class="in"><input id="DL" inputmode="numeric" placeholder="e.g. 2"><span class="unit">count</span></div></div>
+          <div><label for="DS">Severe decelerations</label><div class="in"><input id="DS" inputmode="numeric" placeholder="e.g. 2"><span class="unit">count</span></div></div>
+          <div><label for="DP">Prolonged decelerations</label><div class="in"><input id="DP" inputmode="numeric" placeholder="e.g. 2"><span class="unit">count</span></div><span class="hint">Drops lasting 2 minutes or more</span></div>
+        </div>
+      </fieldset>
+      <div class="err" id="err" role="alert"></div>
+      <button class="go" id="btn" type="submit">Analyse trace</button>
+    </form>
+
+    <aside class="card result" id="result" aria-live="polite">
+      <div class="band"><small>Triage result</small><b id="levelText">Waiting for readings</b></div>
+      <div class="body">
+        <p class="empty" id="empty">Enter the readings, or load one of the real cases, then press <b>Analyse trace</b>.</p>
+        <div class="res" id="res">
+          <div class="lanes" id="lanes"></div>
+          <h3>What drove this result</h3><div id="drivers"></div>
+          <p class="legend">Red raises the chance the trace is abnormal; green lowers it. Compared with a healthy trace.</p>
+          <h3>Suggested next step</h3><div class="action" id="action"></div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <section class="how" aria-label="How it works">
+    <h2>How NeoGuard works</h2>
+    <ol>
+      <li><b>A CTG machine records the baby’s heartbeat</b> and the mother’s contractions during labour. It prints a trace like the one at the top of this page.</li>
+      <li><b>The CTG software summarises the trace into numbers</b>: the average heart rate, how much it varies, and how many times it speeds up or drops.</li>
+      <li><b>You type those numbers in.</b> The model learned from 2,126 real traces that three expert doctors had already labelled Normal, Suspect or Pathological.</li>
+      <li><b>It compares your trace with those cases</b>, shows how likely each label is, which readings drove the answer, and what to do next.</li>
+    </ol>
+  </section>
+
+  <section class="why" aria-label="Why this matters">
+    <div><b>Minutes matter</b><span>Fetal distress can worsen quickly in labour. A fast first read helps the right case reach a doctor sooner.</span></div>
+    <div><b>Experts are scarce</b><span>Trained CTG readers are concentrated in large hospitals. Peripheral clinics often have the machine but not the reader.</span></div>
+    <div><b>Explained, not a black box</b><span>Every result shows which readings pushed it, so staff can learn from it and challenge it.</span></div>
+  </section>
+
+  <footer>NeoGuard is decision support, not a diagnosis, and never replaces clinical judgement or local protocol. The model learned from 2,126 CTGs recorded in Porto, Portugal and labelled by three obstetricians (UCI Cardiotocography dataset). It has not been clinically validated in other settings. The triage thresholds are deliberately cautious, so some normal traces will be flagged as suspect.</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const FIELDS = ['LB','ASTV','MSTV','ALTV','MLTV','duration','AC','FM','UC','DL','DS','DP'];
+const COL = {normal:'#1F9D8B', suspect:'#E39A00', pathological:'#D3304A'};
+const TITLE = {normal:'Normal trace', suspect:'Suspect trace', pathological:'Pathological trace'};
+const ACTION = {
+  normal:['Continue routine monitoring and repeat the CTG as your protocol requires.','Keep watching for any change in movements or heart rate.'],
+  suspect:['Repeat the CTG in about 30 minutes.','Change the mother’s position, check hydration and blood pressure.','Tell the senior midwife or doctor on duty.'],
+  pathological:['Escalate now: call the obstetrician or arrange urgent transfer to a hospital with newborn care.','Do not wait for a repeat trace. Keep the mother on her left side and monitor continuously.']
+};
+let examples = {};
+// ---- The model runs here in the browser, using model.json exported from model.pkl ----
+let M = null;
+const FE = ['LB','AC','FM','UC','DL','DS','DP','ASTV','MSTV','ALTV','MLTV'];
+const COUNTS = ['AC','FM','UC','DL','DS','DP'];
+const LAB = {LB:'Baseline heart rate',AC:'Accelerations',FM:'Fetal movements',UC:'Contractions',DL:'Light decelerations',DS:'Severe decelerations',DP:'Prolonged decelerations',ASTV:'Abnormal short-term variability',MSTV:'Short-term variability',ALTV:'Abnormal long-term variability',MLTV:'Long-term variability'};
+const RNG = {LB:[80,200],ASTV:[0,100],ALTV:[0,100],MSTV:[0,10],MLTV:[0,60]};
+
+function proba(row){
+  const x = FE.map((f,i)=>(row[f]-M.mean[i])/M.scale[i]);
+  if(M.type==='lr'){
+    const z = M.coef.map((w,k)=>w.reduce((s,wi,i)=>s+wi*x[i], M.intercept[k]));
+    const mx = Math.max(...z), e = z.map(v=>Math.exp(v-mx)), sum = e.reduce((a,b)=>a+b);
+    return e.map(v=>v/sum);
+  }
+  const p = [0,0,0];
+  for(const t of M.trees){
+    let n = 0;
+    while(t.f[n] >= 0) n = x[t.f[n]] <= t.t[n] ? t.l[n] : t.r[n];
+    p[0]+=t.v[n][0]; p[1]+=t.v[n][1]; p[2]+=t.v[n][2];
+  }
+  return p.map(v=>v/M.trees.length);
+}
+
+function predict(p){
+  const mins = +p.duration;
+  if(!(mins>=5 && mins<=120)) throw new Error('Recording length must be between 5 and 120 minutes.');
+  const row = {};
+  for(const f of FE){
+    const v = +p[f];
+    if(v<0) throw new Error(LAB[f]+' cannot be negative.');
+    if(RNG[f] && (v<RNG[f][0] || v>RNG[f][1])) throw new Error(`${LAB[f]} should be between ${RNG[f][0]} and ${RNG[f][1]}.`);
+    row[f] = COUNTS.includes(f) ? v/(mins*60) : v;   // counts -> events per second, as in the training data
+  }
+  const base = proba(row), abnormal = 1-base[0];
+  // swap each reading for a healthy-trace median to see how much it pushes the risk up
+  const drivers = FE.map(f=>({label:LAB[f], impact: abnormal-(1-proba({...row,[f]:M.medians[f]})[0])}))
+    .filter(d=>Math.abs(d.impact)>=0.01).sort((a,b)=>Math.abs(b.impact)-Math.abs(a.impact)).slice(0,4);
+  const lv = base[2]>=M.thr[0] ? 2 : (base[1]+base[2]>=M.thr[1] ? 1 : 0);   // safety-first triage rule
+  return {level:['normal','suspect','pathological'][lv], probs:{normal:base[0],suspect:base[1],pathological:base[2]}, drivers};
+}
+
+// Hero trace: heart rate with an acceleration and a late deceleration, contractions below.
+(function(){
+  let s=7; const rnd=()=>(s=s*16807%2147483647)/2147483647, g=(x,c,w)=>Math.exp(-Math.pow((x-c)/w,2));
+  let f='',u='';
+  for(let x=0;x<=1100;x+=4){
+    const y=62+7*Math.sin(x/37)+4*Math.sin(x/11)+(rnd()-.5)*7-30*g(x,300,22)+34*g(x,800,34);
+    const c=185-48*g(x,260,55)-52*g(x,745,60);
+    f+=(x?'L':'M')+x+' '+y.toFixed(1); u+=(x?'L':'M')+x+' '+c.toFixed(1);
+  }
+  $('fhr').setAttribute('d',f); $('uc').setAttribute('d',u);
+})();
+
+fetch('model.json').then(r=>{ if(!r.ok) throw 0; return r.json(); }).then(m=>{
+  M = m; examples = m.examples;
+  $('pill').textContent = `${m.model_name} · catches ${Math.round(m.abnormal_recall*100)}% of abnormal traces · ${m.samples} CTGs`;
+}).catch(()=>{ $('pill').textContent = 'model.json not found'; });
+
+document.querySelectorAll('[data-ex]').forEach(b=>b.addEventListener('click',()=>{
+  const ex=examples[b.dataset.ex]; if(!ex) return showError('The model file is not loaded yet. Open this page through Live Server or GitHub Pages, with model.json next to it.');
+  FIELDS.forEach(f=>$(f).value=ex[f]); $('err').style.display='none';
+}));
+
+function showError(m){const e=$('err');e.textContent=m;e.style.display='block';}
+
+$('form').addEventListener('submit',async ev=>{
+  ev.preventDefault(); $('err').style.display='none';
+  document.querySelectorAll('input').forEach(i=>i.classList.remove('bad'));
+  const payload={};
+  for(const f of FIELDS){
+    const el=$(f); if(el.value.trim()===''||isNaN(+el.value)){el.classList.add('bad');el.focus();return showError('Please fill in: '+document.querySelector('label[for="'+f+'"]').textContent+'. Type 0 if you checked and none were seen.');}
+    payload[f]=+el.value;
+  }
+  const btn=$('btn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span>Analysing…';
+  try{
+    if(!M) throw new Error('model.json is not loaded. Keep it in the same folder as index.html (create it with: python index.py) and open the page through Live Server or GitHub Pages.');
+    render(predict(payload));
+  }catch(e){
+    showError(e.message);
+  }finally{btn.disabled=false;btn.textContent='Analyse trace';}
+});
+
+function render(d){
+  const c=COL[d.level], box=$('result');
+  box.style.setProperty('--c',c);
+  $('levelText').textContent=TITLE[d.level];
+  $('empty').style.display='none'; $('res').style.display='block';
+  $('lanes').innerHTML=['normal','suspect','pathological'].map(k=>
+    `<div class="lane"><span>${k[0].toUpperCase()+k.slice(1)}</span><div class="track"><div class="fill" data-w="${Math.round(d.probs[k]*100)}" style="background:${COL[k]}"></div></div><span>${Math.round(d.probs[k]*100)}%</span></div>`).join('');
+  const max=Math.max(...d.drivers.map(x=>Math.abs(x.impact)),0.05);
+  $('drivers').innerHTML=d.drivers.length?d.drivers.map(x=>{
+    const w=Math.abs(x.impact)/max*50, up=x.impact>0;
+    return `<div class="drow"><span>${x.label}</span><div class="dtrack"><div class="dbar" data-w="${w}" style="background:${up?'#D3304A':'#1F9D8B'};${up?'left':'right'}:50%"></div></div><span class="dval">${up?'+':''}${Math.round(x.impact*100)}</span></div>`;
+  }).join(''):'<p class="legend">No single reading stands out. The trace is close to a typical healthy one.</p>';
+  $('action').innerHTML='<ul>'+ACTION[d.level].map(t=>`<li>${t}</li>`).join('')+'</ul>';
+  requestAnimationFrame(()=>{
+    document.querySelectorAll('.fill').forEach(e=>e.style.width=e.dataset.w+'%');
+    document.querySelectorAll('.dbar').forEach(e=>e.style.width=e.dataset.w+'%');
+  });
+  if(innerWidth<900) box.scrollIntoView({behavior:'smooth',block:'start'});
+}
+</script>
+</body>
+</html>
